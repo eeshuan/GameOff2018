@@ -1,7 +1,9 @@
 import * as PIXI from "pixi.js";
 
-
 let grassKey = "./src/assets/grass.png";
+let monsterJsonKey = "./src/assets/monster.json";
+let monsterPng = "./src/assets/monster.png";
+let gatePng = "./src/assets/gate.png";
 
 let options = {
     backgroundColor: 0xAAAAAA,
@@ -15,7 +17,10 @@ let gameStarted = false;
 let resources;
 let loader = new PIXI.loaders.Loader();
 loader.add([
-    grassKey
+    grassKey,
+    monsterJsonKey,
+    monsterPng,
+    gatePng
 ]);
 loader.load((_, res)=>{
     console.log(res);
@@ -38,41 +43,52 @@ let rightDir = false;
 let ball;
 let ballDirX = 1;
 let ballDirY = 2;
-let ballSpeed = 5;
+let ballSpeed = 2;
 
 function initBoard() {
-    /** Terrain */
-    let sprite = new PIXI.Sprite(resources[grassKey].texture);
-    sprite.alpha = 0.6;
-    // app.stage.addChild(sprite);
-
     /** Cage */
-    let cage = new PIXI.Graphics();
-    cage.beginFill(0x00ff00);
-    cage.drawRect(420, 0, 1080, 1080);
-    cage.endFill();
-    cage.alpha = 0.6;
+    let cage = new PIXI.Sprite(resources[grassKey].texture);
+    cage.alpha = 1;
+    cage.anchor.set(0.5, 0.5);
+    cage.width = 1080;
+    cage.height = 1080;
+    cage.x = 1920/2;
+    cage.y = 1080/2;
     app.stage.addChild(cage);
 
     /** Gates */
-    gateTop = new PIXI.Graphics();
-    gateTop.beginFill(0x000000);
-    gateTop.drawRect(1920/2 - 100, 0, 200, 20);
+    gateTop = new PIXI.Sprite(resources[gatePng].texture);
+    gateTop.anchor.set(0.5, 0);
+    gateTop.x = 1920/2;
+    gateTop.y = 0;
+    gateTop.width = 200;
+    gateTop.height = 20;
     app.stage.addChild(gateTop);
 
-    gateBottom = new PIXI.Graphics();
-    gateBottom.beginFill(0x000000);
-    gateBottom.drawRect(1920/2 - 100, 1080-20, 200, 20);
+    gateBottom = new PIXI.Sprite(resources[gatePng].texture);
+    gateBottom.anchor.set(0.5, 1);
+    gateBottom.x = 1920/2;
+    gateBottom.y = 1080;
+    gateBottom.width = 200;
+    gateBottom.height = 20;
     app.stage.addChild(gateBottom);
 
-    gateLeft = new PIXI.Graphics();
-    gateLeft.beginFill(0x000000);
-    gateLeft.drawRect(420, 1080/2 - 100, 20, 200);
+    gateLeft = new PIXI.Sprite(resources[gatePng].texture);
+    gateLeft.rotation = Math.PI/2;
+    gateLeft.anchor.set(0.5, 1);
+    gateLeft.x = 420;
+    gateLeft.y = 1080/2;
+    gateLeft.width = 200;
+    gateLeft.height = 20;
     app.stage.addChild(gateLeft);
 
-    gateRight = new PIXI.Graphics();
-    gateRight.beginFill(0x000000);
-    gateRight.drawRect(420 + 1080 - 20, 1080/2 - 100, 20, 200);
+    gateRight = new PIXI.Sprite(resources[gatePng].texture);
+    gateRight.rotation = -Math.PI/2;
+    gateRight.anchor.set(0.5, 1);
+    gateRight.x = 1920 - 420;
+    gateRight.y = 1080/2;
+    gateRight.width = 200;
+    gateRight.height = 20;
     app.stage.addChild(gateRight);
 }
 
@@ -111,9 +127,14 @@ function initControls() {
 }
 
 function initBallStart() {
-    ball = new PIXI.Graphics();
-    ball.beginFill(0x000000);
-    ball.drawCircle(1920/2, 1080/2, 10);
+    let sheet = resources[monsterJsonKey].spritesheet;
+    ball = new PIXI.extras.AnimatedSprite(sheet.animations["walk"]);
+    ball.anchor.set(0.5, 0.5);
+    ball.x = 1920/2;
+    ball.y = 1080/2;
+    ball.scale.set(3, 3);
+    ball.animationSpeed = 0.15;
+    ball.play();
     app.stage.addChild(ball);
 }
 
@@ -140,6 +161,7 @@ window.onresize = ()=>{
 };
 resize();
 function endGame() {
+    gameStarted = false;
     ballDirX = 0;
     ballDirY = 0;
     
@@ -152,38 +174,39 @@ function endGame() {
 
 function updateLoop() {
     if (leftDir) {
-        if (gateTop.x > -440) {
+        if (gateTop.x > 420 + 100) {
             gateTop.x -= 10;
             gateBottom.x -= 10;
         }
     }
     if (bottomDir) {
-        if (gateLeft.y < 440) {
+        if (gateLeft.y < 1080 - 100) {
             gateLeft.y += 10;
             gateRight.y += 10;
         }
     }
     if (rightDir) {
-        if (gateTop.x < 440) {
+        if (gateTop.x < 1920 - 420 - 100) {
             gateTop.x += 10;
             gateBottom.x += 10;
         }
     }
     if (topDir) {
-        if (gateLeft.y > -440) {
+        if (gateLeft.y > 0 + 100) {
             gateLeft.y -= 10;
             gateRight.y -= 10;
         }
     }
 
     if (gameStarted) {
-        if (ball.x >= 520 || ball.x <= -520) {
+        if (ball.x >= 1920 - 440 || ball.x <= 440) {
             if (ball.y < gateRight.y - 100 || ball.y > gateRight.y + 100) {
                 endGame();
             }
             ballDirX = -ballDirX;
+            ball.scale.x *= -1;
         }
-        if (ball.y >= 520 || ball.y <= -520) {
+        if (ball.y >= 1080 - 20 || ball.y <= 0 + 20) {
             if (ball.x < gateTop.x - 100 || ball.x > gateTop.x + 100) {
                 endGame();
             }
@@ -191,6 +214,9 @@ function updateLoop() {
         }
         ball.x += ballDirX * ballSpeed;
         ball.y += ballDirY * ballSpeed;
+        if (ballDirY !== 0) {
+            ball.rotation = ballDirX/ballDirY;
+        }
     }
 }
 app.ticker.add(updateLoop.bind(this));
