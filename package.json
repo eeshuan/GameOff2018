@@ -10,7 +10,9 @@
   "author": "Hazelnut",
   "license": "ISC",
   "dependencies": {
+    "@tweenjs/tween.js": "^17.2.0",
     "@types/pixi.js": "^4.8.3",
+    "pixi-layers": "^0.1.9",
     "pixi.js": "^4.8.2"
   },
   "devDependencies": {
