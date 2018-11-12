@@ -56,6 +56,8 @@ let maxBallSpeed = 10;
 let ballSpeed = initialBallSpeed;
 let ballDirX;
 let ballDirY;
+let ballIncreaseRate = 0.2;
+let ballUpdateInterval;
 
 let popup;
 let endTxt;
@@ -174,7 +176,8 @@ function initBallStart() {
     ball.anchor.set(0.5, 0.5);
     ball.x = 1920/2;
     ball.y = 1080/2;
-    ball.scale.set(3, 3);
+    ball.height = 100;
+    ball.width = 100;
     ball.animationSpeed = 0.15;
     ball.play();
     app.stage.addChild(ball);
@@ -221,10 +224,10 @@ function startGame() {
     resetBoard();
     gameStarted = true;
     
-    setInterval(()=>{
+    ballUpdateInterval = setInterval(()=>{
         if (gameStarted) {
             if (ballSpeed < maxBallSpeed) {
-                ballSpeed += 0.1;
+                ballSpeed += ballIncreaseRate;
             }
             let speedLevel = Math.floor(ballSpeed / 2);
             if (speedLevel > level) {
@@ -290,6 +293,7 @@ function resetBoard() {
     popup.interactive = false;
     endTxt.visible = false;
 
+    clearInterval(ballUpdateInterval);
     ballSpeed = initialBallSpeed;
     ball.x = 1920/2;
     ball.y = 1080/2;
@@ -303,6 +307,14 @@ function resetBoard() {
 
 function randomBallDirection() {
     ballDirX = Math.random() * ((Math.random() > 0.5) ? 1 : -1);
+    ballDirY = Math.random() * ((Math.random() > 0.5) ? 1 : -1);
+}
+
+function randomBallDirectionX() {
+    ballDirX = Math.random() * ((Math.random() > 0.5) ? 1 : -1);
+}
+
+function randomBallDirectionY() {
     ballDirY = Math.random() * ((Math.random() > 0.5) ? 1 : -1);
 }
 
@@ -379,22 +391,22 @@ function updateLoop() {
         if (ballDirY !== 0) {
             ball.rotation = ballDirX/ballDirY;
         }
-        score += level;
+        score += 1;
         scoreText.text = score.toLocaleString();
         if (ball.x >= 1920 - 440 || ball.x <= 440) {
-            if (ball.y < gateRight.y - 100 || ball.y > gateRight.y + 100) {
+            if (ball.y < gateRight.y - 110 || ball.y > gateRight.y + 110) {
                 endGame();
             }
             ballDirX = -ballDirX;
-            // ballDirY = randomNumberInRange(-ballDirY, ballDirY);
+            randomBallDirectionY();
             ball.scale.x *= -1;
         }
         if (ball.y >= 1080 - 20 || ball.y <= 0 + 20) {
-            if (ball.x < gateTop.x - 100 || ball.x > gateTop.x + 100) {
+            if (ball.x < gateTop.x - 110 || ball.x > gateTop.x + 110) {
                 endGame();
             }
             ballDirY = -ballDirY;
-            // ballDirX = randomNumberInRange(-ballDirX, ballDirX);
+            randomBallDirectionX();
         }
     }
 }
