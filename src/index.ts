@@ -36,7 +36,10 @@ loader.load((_, res)=>{
     initBallStart();
     initUI();
     initSplash(()=>{
-        startGame();
+        // startGame();
+        popup.visible = true;
+        popupTxt.visible = true;
+        popup.interactive = true;
     });
 });
 
@@ -52,15 +55,16 @@ let gateSpeed = 20;
 
 let ball;
 let initialBallSpeed = 1;
-let maxBallSpeed = 10;
+let maxBallSpeed = 20;
 let ballSpeed = initialBallSpeed;
 let ballDirX;
 let ballDirY;
-let ballIncreaseRate = 0.2;
+let ballIncreaseRate = 0.5;
 let ballUpdateInterval;
 
 let popup;
-let endTxt;
+let popupTxt;
+let endGameTxt;
 
 let highScore = 0;
 let highScoreText;
@@ -128,12 +132,20 @@ function initBoard() {
     });
     app.stage.addChild(popup);
 
-    endTxt = new PIXI.Text("Game ended\n\n\nTap to restart", {fontSize: 50});
-    endTxt.x = 1920/2;
-    endTxt.y = 1080/2;
-    endTxt.anchor.set(0.5, 0.5);
-    endTxt.visible = false;
-    app.stage.addChild(endTxt);
+    popupTxt = new PIXI.Text(`
+    W/ArrowUp: Up
+    S/ArrowLeft: Left
+    A/ArrowDown: Down
+    D/ArrowRight: Right
+    
+    Stop the boar from escaping!
+    Good luck!
+    `, {fontSize: 50, wordWrap: true, wordWrapWidth: 900});
+    popupTxt.x = 1920/2 - 20;
+    popupTxt.y = 1080/2;
+    popupTxt.anchor.set(0.5, 0.5);
+    popupTxt.visible = false;
+    app.stage.addChild(popupTxt);
 }
 
 function initControls() {
@@ -180,6 +192,7 @@ function initBallStart() {
     ball.width = 100;
     ball.animationSpeed = 0.15;
     ball.play();
+    ball.visible = false;
     app.stage.addChild(ball);
 }
 
@@ -212,7 +225,15 @@ function endGame() {
 
     popup.visible = true;
     popup.interactive = true;
-    endTxt.visible = true;
+    popupTxt.text = `
+    Boar escaped!
+    
+    Score: ${score}
+    
+    Tap to restart`;
+    popupTxt.x -= 30;
+    popupTxt.y -= 20;
+    popupTxt.visible = true;
 
     if (score >= highScore) {
         highScore = score;
@@ -291,12 +312,13 @@ function resetBoard() {
     
     popup.visible = false;
     popup.interactive = false;
-    endTxt.visible = false;
+    popupTxt.visible = false;
 
     clearInterval(ballUpdateInterval);
     ballSpeed = initialBallSpeed;
     ball.x = 1920/2;
     ball.y = 1080/2;
+    ball.visible = true;
     randomBallDirection();
 
     score = 0;
@@ -308,14 +330,17 @@ function resetBoard() {
 function randomBallDirection() {
     ballDirX = Math.random() * ((Math.random() > 0.5) ? 1 : -1);
     ballDirY = Math.random() * ((Math.random() > 0.5) ? 1 : -1);
+    ball.rotation = Math.atan2(ballDirY, ballDirX);
 }
 
 function randomBallDirectionX() {
-    ballDirX = Math.random() * ((Math.random() > 0.5) ? 1 : -1);
+    ballDirX = Math.random() * ((Math.random() > 0.5) ? 1 : -1) + ballIncreaseRate;
+    ball.rotation = Math.atan2(ballDirY, ballDirX);
 }
 
 function randomBallDirectionY() {
-    ballDirY = Math.random() * ((Math.random() > 0.5) ? 1 : -1);
+    ballDirY = Math.random() * ((Math.random() > 0.5) ? 1 : -1) + ballIncreaseRate;
+    ball.rotation = Math.atan2(ballDirY, ballDirX);
 }
 
 function initUI() {
@@ -330,6 +355,21 @@ function initUI() {
     highScoreText.x = 420/2;
     highScoreText.y = 1080/2;
     leftUIContainer.addChild(highScoreText);
+    let creditsDev = new PIXI.Text("Developed by Hazelnut", {fontSize: 30, fill: "#FFFFFF"});
+    creditsDev.anchor.set(0.5, 0.5);
+    creditsDev.x = 420/2;
+    creditsDev.y = 1080 - 110;
+    leftUIContainer.addChild(creditsDev);
+    let creditsArt = new PIXI.Text("Art by Hazelnut", {fontSize: 30, fill: "#FFFFFF"});
+    creditsArt.anchor.set(0.5, 0.5);
+    creditsArt.x = 420/2;
+    creditsArt.y = 1080 - 70;
+    leftUIContainer.addChild(creditsArt);
+    let creditsMusic = new PIXI.Text("Music by Hazelnut", {fontSize: 30, fill: "#FFFFFF"});
+    creditsMusic.anchor.set(0.5, 0.5);
+    creditsMusic.x = 420/2;
+    creditsMusic.y = 1080 - 30;
+    leftUIContainer.addChild(creditsMusic);
 
     let rightUiContainer = new PIXI.Container();
     rightUiContainer.x = 1080 + 420;
@@ -388,9 +428,6 @@ function updateLoop() {
     if (gameStarted) {
         ball.x += ballDirX * ballSpeed;
         ball.y += ballDirY * ballSpeed;
-        if (ballDirY !== 0) {
-            ball.rotation = ballDirX/ballDirY;
-        }
         score += 1;
         scoreText.text = score.toLocaleString();
         if (ball.x >= 1920 - 440 || ball.x <= 440) {
@@ -399,7 +436,6 @@ function updateLoop() {
             }
             ballDirX = -ballDirX;
             randomBallDirectionY();
-            ball.scale.x *= -1;
         }
         if (ball.y >= 1080 - 20 || ball.y <= 0 + 20) {
             if (ball.x < gateTop.x - 110 || ball.x > gateTop.x + 110) {
