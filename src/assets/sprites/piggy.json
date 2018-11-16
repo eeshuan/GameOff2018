@@ -1,0 +1,47 @@
+{"frames": {
+
+"move_00.png":
+{
+	"frame": {"x":1,"y":1,"w":394,"h":772},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":1021,"y":559,"w":394,"h":772},
+	"sourceSize": {"w":2500,"h":1800}
+},
+"move_01.png":
+{
+	"frame": {"x":1,"y":775,"w":394,"h":772},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":1021,"y":559,"w":394,"h":772},
+	"sourceSize": {"w":2500,"h":1800}
+},
+"move_02.png":
+{
+	"frame": {"x":397,"y":747,"w":394,"h":772},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":1021,"y":559,"w":394,"h":772},
+	"sourceSize": {"w":2500,"h":1800}
+},
+"move_03.png":
+{
+	"frame": {"x":793,"y":747,"w":394,"h":772},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":1021,"y":559,"w":394,"h":772},
+	"sourceSize": {"w":2500,"h":1800}
+}},
+"animations": {
+	"move": ["move_00.png", "move_01.png", "move_02.png", "move_03.png"]
+},
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "piggy.png",
+	"format": "RGBA8888",
+	"size": {"w":1188,"h":1548},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:726489d5f7c16014ff2dc8c6ca4a19ab:de2c9f84b983ae7b090e8e089427f55f:89a657ceff67a644d45407887afbae90$"
+}
+}

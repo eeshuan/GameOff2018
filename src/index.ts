@@ -4,7 +4,6 @@ import TWEEN from "@tweenjs/tween.js";
 
 let grassKey = "./src/assets/sprites/grass.png";
 let monsterJsonKey = "./src/assets/sprites/monster.json";
-let monsterPng = "./src/assets/sprites/monster.png";
 let gatePng = "./src/assets/sprites/gate.png";
 let splashJpg = "./src/assets/sprites/splash.jpg";
 let popupJpg = "./src/assets/sprites/popup.jpg";
@@ -28,7 +27,6 @@ let loader = new PIXI.loaders.Loader();
 loader.add([
     grassKey,
     monsterJsonKey,
-    monsterPng,
     gatePng,
     splashJpg,
     popupJpg,
@@ -81,7 +79,6 @@ let ballUpdateInterval;
 
 let popup;
 let popupTxt;
-let endGameTxt;
 
 let highScore = 0;
 let highScoreText;
@@ -296,27 +293,20 @@ function initSplash(callback) {
     title.y = 200;
     container.addChild(title);
 
-    // let startBtn = new PIXI.Text("Tap to Start", {fontSize: 100, fill: "#FFFFFF"});
-    // startBtn.anchor.set(0.5, 0.5);
-    // startBtn.x = 1920/2;
-    // startBtn.y = 1080 - 200;
-    // container.addChild(startBtn);
-
-    // new TWEEN.Tween(startBtn)
-    // .to({alpha: 0}, 1000)
-    // .repeat(Infinity)
-    // .yoyo(true)
-    // .start();
-
     let playButton = new PIXI.Sprite(resources[popupJpg].texture);
     playButton.anchor.set(0.5, 0.5);
     playButton.x = 1920/2;
     playButton.y = 1080 - 300;
-    playButton.width = 300;
-    playButton.height = 100;
     playButton.zIndex = 2;
     playButton.interactive = true;
+    playButton.on("pointerdown", ()=>{
+        playButton.scale.set(0.9, 0.9);
+    });
+    playButton.on("pointerupoutside", ()=>{
+        playButton.scale.set(1, 1);
+    });
     playButton.on("pointerup", ()=>{
+        playButton.scale.set(1, 1);
         container.visible = false;
         resources[buttonFeedback].data.play();
         callback();
@@ -333,11 +323,16 @@ function initSplash(callback) {
     helpButton.anchor.set(0.5, 0.5);
     helpButton.x = 1920/2;
     helpButton.y = 1080 - 150;
-    helpButton.width = 300;
-    helpButton.height = 100;
     helpButton.zIndex = 2;
     helpButton.interactive = true;
+    helpButton.on("pointerdown", ()=>{
+        helpButton.scale.set(0.9, 0.9);
+    });
+    helpButton.on("pointerupoutside", ()=>{
+        helpButton.scale.set(1, 1);
+    });
     helpButton.on("pointerup", ()=>{
+        helpButton.scale.set(1, 1);
         helpPopup.visible = true;
         helpPopupTxt.visible = true;
         creditsPopupTxt.visible = true;
@@ -389,8 +384,6 @@ function initSplash(callback) {
     creditsPopupTxt.anchor.set(0, 1);
     creditsPopupTxt.visible = false;
     container.addChild(creditsPopupTxt);
-
-    
 
     app.stage.addChild(container);
 }
@@ -526,7 +519,7 @@ function updateLoop() {
         }
     }
 
-    if (gameStarted) {
+    if (gameStarted) {        
         ball.x += ballDirX * ballSpeed;
         ball.y += ballDirY * ballSpeed;
         score += 1;
