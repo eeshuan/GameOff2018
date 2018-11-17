@@ -36,26 +36,57 @@ loader.add([
     hurtSound,
     blockSound
 ]);
+let loadingBarContainer = new PIXI.Container();
+loadingBarContainer.x = 1920/2 - 500;
+loadingBarContainer.y = 1080/2;
+
+let loadingBarBase = new PIXI.Graphics();
+loadingBarBase.beginFill(0x000000);
+loadingBarBase.drawRoundedRect(0, 0, 1000, 20, 15);
+loadingBarBase.endFill();
+loadingBarContainer.addChild(loadingBarBase);
+
+let loadingBarProgress = new PIXI.Graphics();
+loadingBarProgress.beginFill(0xFFFFFF);
+loadingBarProgress.drawRoundedRect(0, 0, 1000, 20, 15);
+loadingBarProgress.endFill();
+loadingBarProgress.width = 0;
+loadingBarContainer.addChild(loadingBarProgress);
+
+let loadingBarText = new PIXI.Text("", {fontSize: 60, fill: 0xFFFFFF});
+loadingBarText.anchor.set(0.5, 0.5);
+loadingBarText.x = 500;
+loadingBarText.y = 100;
+loadingBarContainer.addChild(loadingBarText);
+
+app.stage.addChild(loadingBarContainer);
+
+loader.on("progress", (loader) => {
+    loadingBarProgress.width = loader.progress / 100 * 1000;
+    loadingBarText.text = `${loader.progress}%`;
+})
 loader.load((_, res)=>{
     console.log(res);
-    resources = res;
-    initBoard();
-    initControls();
-    initBallStart();
-    initUI();
-    initSplash(()=>{
-        popup.visible = true;
-        popupTxt.visible = true;
-        popup.interactive = true;
-        resources[gameBgm].data.loop = true;
-        resources[gameBgm].data.volume = 0.1;
-        resources[gameBgm].data.play();
-        resources[titleBgm].data.pause();
-    });
-    resources[titleBgm].data.loop = true;
-    resources[titleBgm].data.volume = 0.1;
-    resources[titleBgm].data.play();
-    resources[buttonFeedback].data.volume = 0.5;
+    setTimeout(() => {
+        resources = res;
+        initBoard();
+        initControls();
+        initBallStart();
+        initUI();
+        initSplash(()=>{
+            popup.visible = true;
+            popupTxt.visible = true;
+            popup.interactive = true;
+            resources[gameBgm].data.loop = true;
+            resources[gameBgm].data.volume = 0.1;
+            resources[gameBgm].data.play();
+            resources[titleBgm].data.pause();
+        });
+        resources[titleBgm].data.loop = true;
+        resources[titleBgm].data.volume = 0.1;
+        resources[titleBgm].data.play();
+        resources[buttonFeedback].data.volume = 0.5;
+    }, 1000);
 });
 
 let gateTop;
@@ -416,8 +447,15 @@ function resetBoard() {
 }
 
 function randomBallDirection() {
+    let threshold = 0.5;
     ballDirX = Math.random() * ((Math.random() > 0.5) ? 1 : -1);
     ballDirY = Math.random() * ((Math.random() > 0.5) ? 1 : -1);
+    if (Math.abs(ballDirX) < threshold) {
+        ballDirX *= 2;
+    }
+    if (Math.abs(ballDirY) < threshold) {
+        ballDirY *= 2;
+    }
     ball.rotation = Math.atan2(ballDirY, ballDirX);
 }
 
