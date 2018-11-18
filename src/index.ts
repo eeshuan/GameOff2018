@@ -2,7 +2,7 @@ import * as PIXI from "pixi.js";
 import "pixi-layers";
 import TWEEN from "@tweenjs/tween.js";
 
-let grassKey = "./src/assets/sprites/grass.jpg";
+let grassKey = "./src/assets/sprites/grass.png";
 let monsterJsonKey = "./src/assets/sprites/monster.json";
 let gatePng = "./src/assets/sprites/gate.png";
 let splashJpg = "./src/assets/sprites/splash.jpg";
@@ -115,22 +115,22 @@ loader.load((_, res)=>{
                         if (ev.clientX - startPtX > 0) {
                             leftDir = false;
                             rightDir = true;
-                            gateSpeedX = Math.abs((ev.clientX - startPtX) / 4);
+                            gateSpeedX = Math.abs((ev.clientX - startPtX) / 10);
                         }
                         else if (ev.clientX - startPtX < 0) {
                             leftDir = true;
                             rightDir = false;
-                            gateSpeedX = Math.abs((ev.clientX - startPtX) / 4);
+                            gateSpeedX = Math.abs((ev.clientX - startPtX) / 10);
                         }
                         if (ev.clientY - startPtY > 0) {
                             topDir = false;
                             bottomDir = true;
-                            gateSpeedY = Math.abs((ev.clientY - startPtY) / 4);
+                            gateSpeedY = Math.abs((ev.clientY - startPtY) / 10);
                         }
                         else if (ev.clientY - startPtY < 0) {
                             bottomDir = false;
                             topDir = true;
-                            gateSpeedY = Math.abs((ev.clientY - startPtY) / 4);
+                            gateSpeedY = Math.abs((ev.clientY - startPtY) / 10);
                         }
                     }
                 }
@@ -219,37 +219,38 @@ function initBoard() {
 
     /** Gates */
     gateTop = new PIXI.Sprite(resources[gatePng].texture);
-    gateTop.anchor.set(0.5, 0);
+    gateTop.rotation = Math.PI;
+    gateTop.anchor.set(0.5, 0.5);
     gateTop.x = 1920/2;
     gateTop.y = 0;
     gateTop.width = 200;
-    gateTop.height = 20;
+    gateTop.height = 50;
     app.stage.addChild(gateTop);
 
     gateBottom = new PIXI.Sprite(resources[gatePng].texture);
-    gateBottom.anchor.set(0.5, 1);
+    gateBottom.anchor.set(0.5, 0.5);
     gateBottom.x = 1920/2;
     gateBottom.y = 1080;
     gateBottom.width = 200;
-    gateBottom.height = 20;
+    gateBottom.height = 50;
     app.stage.addChild(gateBottom);
 
     gateLeft = new PIXI.Sprite(resources[gatePng].texture);
     gateLeft.rotation = Math.PI/2;
-    gateLeft.anchor.set(0.5, 1);
+    gateLeft.anchor.set(0.5, 0.5);
     gateLeft.x = 420;
     gateLeft.y = 1080/2;
     gateLeft.width = 200;
-    gateLeft.height = 20;
+    gateLeft.height = 50;
     app.stage.addChild(gateLeft);
 
     gateRight = new PIXI.Sprite(resources[gatePng].texture);
     gateRight.rotation = -Math.PI/2;
-    gateRight.anchor.set(0.5, 1);
+    gateRight.anchor.set(0.5, 0.5);
     gateRight.x = 1920 - 420;
     gateRight.y = 1080/2;
     gateRight.width = 200;
-    gateRight.height = 20;
+    gateRight.height = 50;
     app.stage.addChild(gateRight);
 
     popup = new PIXI.Sprite(resources[popupJpg].texture);
@@ -371,8 +372,6 @@ function endGame() {
     Score: ${score}
     
     Tap to restart`;
-    popupTxt.x -= 30;
-    popupTxt.y -= 20;
     popupTxt.visible = true;
 
     if (score >= highScore) {
