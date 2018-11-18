@@ -2,7 +2,7 @@ import * as PIXI from "pixi.js";
 import "pixi-layers";
 import TWEEN from "@tweenjs/tween.js";
 
-let grassKey = "./src/assets/sprites/grass.png";
+let grassKey = "./src/assets/sprites/grass.jpg";
 let monsterJsonKey = "./src/assets/sprites/monster.json";
 let gatePng = "./src/assets/sprites/gate.png";
 let splashJpg = "./src/assets/sprites/splash.jpg";
@@ -69,6 +69,7 @@ loader.on("progress", (loader) => {
 let startPtX = 0;
 let startPtY = 0;
 let pointerdown = false;
+let inGame = false;
 
 loader.load((_, res)=>{
     console.log(res);
@@ -96,52 +97,56 @@ loader.load((_, res)=>{
             joyStick.addChild(joyStickHandle);
 
             app.stage.addChild(joyStick);
-            // let currWidth = Number(app.renderer.view.style.width.substring(0, app.renderer.view.style.width.length - 2));
-            // let currHeight = Number(app.renderer.view.style.height.substring(0, app.renderer.view.style.height.length - 2));             
 
             document.onpointerdown = (ev) => {
-                startPtX = ev.clientX;
-                startPtY = ev.clientY;
-                pointerdown = true;
-                joyStick.visible = true;
+                if (inGame) {
+                    startPtX = ev.clientX;
+                    startPtY = ev.clientY;
+                    pointerdown = true;
+                    joyStick.visible = true;
+                }
             }
             document.onpointermove = (ev) => {
-                if (pointerdown) {
-                    joyStickHandle.x = ev.clientX - startPtX;
-                    joyStickHandle.y = ev.clientY - startPtY;
-                    if (ev.clientX - startPtX > 0) {
-                        leftDir = false;
-                        rightDir = true;
-                        gateSpeedX = Math.abs((ev.clientX - startPtX) / 4);
-                    }
-                    else if (ev.clientX - startPtX < 0) {
-                        leftDir = true;
-                        rightDir = false;
-                        gateSpeedX = Math.abs((ev.clientX - startPtX) / 4);
-                    }
-                    if (ev.clientY - startPtY > 0) {
-                        topDir = false;
-                        bottomDir = true;
-                        gateSpeedY = Math.abs((ev.clientY - startPtY) / 4);
-                    }
-                    else if (ev.clientY - startPtY < 0) {
-                        bottomDir = false;
-                        topDir = true;
-                        gateSpeedY = Math.abs((ev.clientY - startPtY) / 4);
+                if (inGame) {
+                    if (pointerdown) {
+                        joyStickHandle.x = Math.max(Math.min(ev.clientX - startPtX, 100), -100);
+                        joyStickHandle.y = Math.max(Math.min(ev.clientY - startPtY, 100), -100);
+                        if (ev.clientX - startPtX > 0) {
+                            leftDir = false;
+                            rightDir = true;
+                            gateSpeedX = Math.abs((ev.clientX - startPtX) / 4);
+                        }
+                        else if (ev.clientX - startPtX < 0) {
+                            leftDir = true;
+                            rightDir = false;
+                            gateSpeedX = Math.abs((ev.clientX - startPtX) / 4);
+                        }
+                        if (ev.clientY - startPtY > 0) {
+                            topDir = false;
+                            bottomDir = true;
+                            gateSpeedY = Math.abs((ev.clientY - startPtY) / 4);
+                        }
+                        else if (ev.clientY - startPtY < 0) {
+                            bottomDir = false;
+                            topDir = true;
+                            gateSpeedY = Math.abs((ev.clientY - startPtY) / 4);
+                        }
                     }
                 }
             }
             document.onpointerup = () => {
-                startPtX = 0;
-                startPtY = 0;
-                leftDir = false;
-                rightDir = false;
-                topDir = false;
-                bottomDir = false;
-                pointerdown = false;
-                joyStick.visible = false;
-                joyStickHandle.x = 0;
-                joyStickHandle.y = 0;
+                if (inGame) {
+                    startPtX = 0;
+                    startPtY = 0;
+                    leftDir = false;
+                    rightDir = false;
+                    topDir = false;
+                    bottomDir = false;
+                    pointerdown = false;
+                    joyStick.visible = false;
+                    joyStickHandle.x = 0;
+                    joyStickHandle.y = 0;
+                }
             }
         }
     }, 1000);
@@ -161,6 +166,7 @@ function run(res) {
         resources[gameBgm].data.volume = 0.1;
         resources[gameBgm].data.play();
         resources[titleBgm].data.pause();
+        inGame = true;
     });
     resources[titleBgm].data.loop = true;
     resources[titleBgm].data.volume = 0.1;
@@ -264,9 +270,11 @@ function initBoard() {
     Up/Down/Left/Right
     to move.
 
-    Stop the boar from escaping!
+    Stop the monster from escaping!
     Good luck!
-    `, {fontSize: 50, wordWrap: true, wordWrapWidth: 900});
+
+    Tap to start
+    `, {fontSize: 40, wordWrap: true, wordWrapWidth: 900});
     popupTxt.x = 1920/2 - 20;
     popupTxt.y = 1080/2;
     popupTxt.anchor.set(0.5, 0.5);
@@ -613,6 +621,7 @@ function initUI() {
     app.stage.addChild(rightUiContainer);
 }
 
+let lenientThreshold = 130;
 function updateLoop() {
     TWEEN.update();
     if (leftDir) {
@@ -646,7 +655,7 @@ function updateLoop() {
         score += 1;
         scoreText.text = score.toLocaleString();
         if (ball.x >= 1920 - 440 || ball.x <= 440) {
-            if (ball.y < gateRight.y - 110 || ball.y > gateRight.y + 110) {
+            if (ball.y < gateRight.y - lenientThreshold || ball.y > gateRight.y + lenientThreshold) {
                 endGame();
             }
             else {
@@ -655,7 +664,7 @@ function updateLoop() {
             }
         }
         if (ball.y >= 1080 - 20 || ball.y <= 0 + 20) {
-            if (ball.x < gateTop.x - 110 || ball.x > gateTop.x + 110) {
+            if (ball.x < gateTop.x - lenientThreshold || ball.x > gateTop.x + lenientThreshold) {
                 endGame();
             }
             else {
