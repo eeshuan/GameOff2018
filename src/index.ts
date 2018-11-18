@@ -77,6 +77,7 @@ loader.load((_, res)=>{
         loadingBarText.text = "Press anywhere to start";
         document.onpointerup = () => {
             run(res);
+            makeFullScreen();
 
             let joyStick = new PIXI.Container();
             joyStick.x = 210;
@@ -489,8 +490,12 @@ function initSplash(callback) {
     A/ArrowDown: Down
     D/ArrowRight: Right
 
-    Stop the boar from escaping by moving the gates
-    to block it.
+    Stop the monster from escaping by moving
+    the gates to block it.
+
+
+
+                                Tap to close
     `, {fontSize: 50, wordWrap: true, wordWrapWidth: 1800});
     helpPopupTxt.x = 350;
     helpPopupTxt.y = 80;
@@ -677,6 +682,13 @@ function updateLoop() {
 app.ticker.add(updateLoop.bind(this));
 
 /** Helper */
-function randomNumberInRange(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+function makeFullScreen() {
+    let htmlDocElement = document.documentElement;
+    if (htmlDocElement != null) {
+        let requestMethod = htmlDocElement.requestFullscreen || htmlDocElement.webkitRequestFullScreen || htmlDocElement.mozRequestFullScreen || htmlDocElement.msRequestFullScreen ||
+        htmlDocElement.requestFullscreen || htmlDocElement.webkitRequestFullscreen || htmlDocElement.mozRequestFullscreen || htmlDocElement.msRequestFullscreen;
+        if (requestMethod != undefined) {
+            requestMethod.call(htmlDocElement);
+        }
+    }
 }
