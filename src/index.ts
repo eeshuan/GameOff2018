@@ -65,29 +65,108 @@ loader.on("progress", (loader) => {
     loadingBarProgress.width = loader.progress / 100 * 1000;
     loadingBarText.text = `${loader.progress}%`;
 })
+
+let startPtX = 0;
+let startPtY = 0;
+let pointerdown = false;
+
 loader.load((_, res)=>{
     console.log(res);
     setTimeout(() => {
-        resources = res;
-        initBoard();
-        initControls();
-        initBallStart();
-        initUI();
-        initSplash(()=>{
-            popup.visible = true;
-            popupTxt.visible = true;
-            popup.interactive = true;
-            resources[gameBgm].data.loop = true;
-            resources[gameBgm].data.volume = 0.1;
-            resources[gameBgm].data.play();
-            resources[titleBgm].data.pause();
-        });
-        resources[titleBgm].data.loop = true;
-        resources[titleBgm].data.volume = 0.1;
-        resources[titleBgm].data.play();
-        resources[buttonFeedback].data.volume = 0.5;
+        loadingBarText.text = "Press anywhere to start";
+        document.onpointerup = () => {
+            run(res);
+
+            let joyStick = new PIXI.Container();
+            joyStick.x = 210;
+            joyStick.y = 1080 - 300;
+            joyStick.alpha = 0.6;
+            joyStick.visible = false;
+
+            let joyStickBase = new PIXI.Graphics();
+            joyStickBase.beginFill(0x000000);
+            joyStickBase.drawCircle(0, 0, 100);
+            joyStickBase.endFill();
+            joyStick.addChild(joyStickBase);
+
+            let joyStickHandle = new PIXI.Graphics();
+            joyStickHandle.beginFill(0xFFFFFF);
+            joyStickHandle.drawCircle(0, 0, 50);
+            joyStickHandle.endFill();
+            joyStick.addChild(joyStickHandle);
+
+            app.stage.addChild(joyStick);
+            // let currWidth = Number(app.renderer.view.style.width.substring(0, app.renderer.view.style.width.length - 2));
+            // let currHeight = Number(app.renderer.view.style.height.substring(0, app.renderer.view.style.height.length - 2));             
+
+            document.onpointerdown = (ev) => {
+                startPtX = ev.clientX;
+                startPtY = ev.clientY;
+                pointerdown = true;
+                joyStick.visible = true;
+            }
+            document.onpointermove = (ev) => {
+                if (pointerdown) {
+                    joyStickHandle.x = ev.clientX - startPtX;
+                    joyStickHandle.y = ev.clientY - startPtY;
+                    if (ev.clientX - startPtX > 0) {
+                        leftDir = false;
+                        rightDir = true;
+                        gateSpeedX = Math.abs((ev.clientX - startPtX) / 4);
+                    }
+                    else if (ev.clientX - startPtX < 0) {
+                        leftDir = true;
+                        rightDir = false;
+                        gateSpeedX = Math.abs((ev.clientX - startPtX) / 4);
+                    }
+                    if (ev.clientY - startPtY > 0) {
+                        topDir = false;
+                        bottomDir = true;
+                        gateSpeedY = Math.abs((ev.clientY - startPtY) / 4);
+                    }
+                    else if (ev.clientY - startPtY < 0) {
+                        bottomDir = false;
+                        topDir = true;
+                        gateSpeedY = Math.abs((ev.clientY - startPtY) / 4);
+                    }
+                }
+            }
+            document.onpointerup = () => {
+                startPtX = 0;
+                startPtY = 0;
+                leftDir = false;
+                rightDir = false;
+                topDir = false;
+                bottomDir = false;
+                pointerdown = false;
+                joyStick.visible = false;
+                joyStickHandle.x = 0;
+                joyStickHandle.y = 0;
+            }
+        }
     }, 1000);
 });
+
+function run(res) {
+    resources = res;
+    initBoard();
+    initControls();
+    initBallStart();
+    initUI();
+    initSplash(()=>{
+        popup.visible = true;
+        popupTxt.visible = true;
+        popup.interactive = true;
+        resources[gameBgm].data.loop = true;
+        resources[gameBgm].data.volume = 0.1;
+        resources[gameBgm].data.play();
+        resources[titleBgm].data.pause();
+    });
+    resources[titleBgm].data.loop = true;
+    resources[titleBgm].data.volume = 0.1;
+    resources[titleBgm].data.play();
+    resources[buttonFeedback].data.volume = 0.5;
+}
 
 let gateTop;
 let gateBottom;
@@ -97,7 +176,9 @@ let topDir = false;
 let bottomDir = false;
 let leftDir = false;
 let rightDir = false;
-let gateSpeed = 20;
+let gateSpeedInit = 20;
+let gateSpeedX = gateSpeedInit;
+let gateSpeedY = gateSpeedInit;
 
 let ball;
 let initialBallSpeed = 1;
@@ -196,6 +277,8 @@ function initBoard() {
 function initControls() {
     document.onkeydown = (ev) => {
         let key = ev.key.toLowerCase();
+        gateSpeedX = gateSpeedInit;
+        gateSpeedY = gateSpeedInit;
         if (key === "a" || key === "arrowleft") {
             leftDir = true;
         }
@@ -534,26 +617,26 @@ function updateLoop() {
     TWEEN.update();
     if (leftDir) {
         if (gateTop.x > 420 + 100) {
-            gateTop.x -= gateSpeed;
-            gateBottom.x -= gateSpeed;
+            gateTop.x -= gateSpeedX;
+            gateBottom.x -= gateSpeedX;
         }
     }
     if (bottomDir) {
         if (gateLeft.y < 1080 - 100) {
-            gateLeft.y += gateSpeed;
-            gateRight.y += gateSpeed;
+            gateLeft.y += gateSpeedY;
+            gateRight.y += gateSpeedY;
         }
     }
     if (rightDir) {
         if (gateTop.x < 1920 - 420 - 100) {
-            gateTop.x += gateSpeed;
-            gateBottom.x += gateSpeed;
+            gateTop.x += gateSpeedX;
+            gateBottom.x += gateSpeedX;
         }
     }
     if (topDir) {
         if (gateLeft.y > 0 + 100) {
-            gateLeft.y -= gateSpeed;
-            gateRight.y -= gateSpeed;
+            gateLeft.y -= gateSpeedY;
+            gateRight.y -= gateSpeedY;
         }
     }
 

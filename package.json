@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "./node_modules/.bin/webpack-dev-server --config webpack.dev.config.js",
+    "start": "./node_modules/.bin/webpack-dev-server --config webpack.dev.config.js --host 0.0.0.0",
     "build": "webpack --config webpack.dev.config.js"
   },
   "author": "Hazelnut",
