@@ -1,47 +1,47 @@
 {"frames": {
 
-"move_00.png":
+"move_001.png":
 {
-	"frame": {"x":1,"y":1,"w":394,"h":772},
+	"frame": {"x":1,"y":1,"w":394,"h":771},
 	"rotated": false,
 	"trimmed": true,
-	"spriteSourceSize": {"x":1021,"y":559,"w":394,"h":772},
-	"sourceSize": {"w":2500,"h":1800}
+	"spriteSourceSize": {"x":55,"y":27,"w":394,"h":771},
+	"sourceSize": {"w":518,"h":798}
 },
-"move_01.png":
+"move_002.png":
 {
-	"frame": {"x":1,"y":775,"w":394,"h":772},
+	"frame": {"x":397,"y":1,"w":394,"h":771},
 	"rotated": false,
 	"trimmed": true,
-	"spriteSourceSize": {"x":1021,"y":559,"w":394,"h":772},
-	"sourceSize": {"w":2500,"h":1800}
+	"spriteSourceSize": {"x":55,"y":27,"w":394,"h":771},
+	"sourceSize": {"w":518,"h":798}
 },
-"move_02.png":
+"move_003.png":
 {
-	"frame": {"x":397,"y":747,"w":394,"h":772},
+	"frame": {"x":793,"y":1,"w":394,"h":771},
 	"rotated": false,
 	"trimmed": true,
-	"spriteSourceSize": {"x":1021,"y":559,"w":394,"h":772},
-	"sourceSize": {"w":2500,"h":1800}
+	"spriteSourceSize": {"x":55,"y":27,"w":394,"h":771},
+	"sourceSize": {"w":518,"h":798}
 },
-"move_03.png":
+"move_004.png":
 {
-	"frame": {"x":793,"y":747,"w":394,"h":772},
+	"frame": {"x":1189,"y":1,"w":394,"h":771},
 	"rotated": false,
 	"trimmed": true,
-	"spriteSourceSize": {"x":1021,"y":559,"w":394,"h":772},
-	"sourceSize": {"w":2500,"h":1800}
+	"spriteSourceSize": {"x":55,"y":27,"w":394,"h":771},
+	"sourceSize": {"w":518,"h":798}
 }},
 "animations": {
-	"move": ["move_00.png", "move_01.png", "move_02.png", "move_03.png"]
+	"walk": ["move_001.png","move_002.png","move_003.png","move_004.png"]
 },
 "meta": {
 	"app": "https://www.codeandweb.com/texturepacker",
 	"version": "1.0",
 	"image": "piggy.png",
 	"format": "RGBA8888",
-	"size": {"w":1188,"h":1548},
+	"size": {"w":1584,"h":773},
 	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:726489d5f7c16014ff2dc8c6ca4a19ab:de2c9f84b983ae7b090e8e089427f55f:89a657ceff67a644d45407887afbae90$"
+	"smartupdate": "$TexturePacker:SmartUpdate:0cd3c0f828f4793b05f01ad0bfa3e90b:c94006e9950ecd8a783ec55cd6576ec1:6e51cfab8fd9bab793653469cdb64416$"
 }
 }

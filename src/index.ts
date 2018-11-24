@@ -2,11 +2,19 @@ import * as PIXI from "pixi.js";
 import "pixi-layers";
 import TWEEN from "@tweenjs/tween.js";
 
+/** Sprites */
 let grassKey = "./src/assets/sprites/grass.png";
-let monsterJsonKey = "./src/assets/sprites/monster.json";
+let piggyJsonKey = "./src/assets/sprites/piggy.json";
 let gatePng = "./src/assets/sprites/gate.png";
 let splashJpg = "./src/assets/sprites/splash.jpg";
-let popupJpg = "./src/assets/sprites/popup.jpg";
+let startBtnImg = "./src/assets/sprites/startBtn.png";
+let helpBtnImg = "./src/assets/sprites/helpBtn.png";
+let startPopupImg = "./src/assets/sprites/startPopup.png";
+let helpPopupImg = "./src/assets/sprites/helpPopup.png";
+let endPopupImg = "./src/assets/sprites/endPopup.png";
+let piggyShadow = "./src/assets/sprites/shadow.png";
+
+/** Sounds */
 let titleBgm = "./src/assets/sounds/title.mp3";
 let gameBgm = "./src/assets/sounds/bgm.mp3";
 let buttonFeedback = "./src/assets/sounds/button_feedback.wav";
@@ -26,10 +34,15 @@ let resources;
 let loader = new PIXI.loaders.Loader();
 loader.add([
     grassKey,
-    monsterJsonKey,
+    piggyJsonKey,
     gatePng,
     splashJpg,
-    popupJpg,
+    startBtnImg,
+    helpBtnImg,
+    startPopupImg,
+    helpPopupImg,
+    endPopupImg,
+    piggyShadow,
     titleBgm,
     gameBgm,
     buttonFeedback,
@@ -63,7 +76,7 @@ app.stage.addChild(loadingBarContainer);
 
 loader.on("progress", (loader) => {
     loadingBarProgress.width = loader.progress / 100 * 1000;
-    loadingBarText.text = `${loader.progress}%`;
+    loadingBarText.text = `${loader.progress.toFixed(0)}%`;
 })
 
 let startPtX = 0;
@@ -72,7 +85,7 @@ let pointerdown = false;
 let inGame = false;
 
 loader.load((_, res)=>{
-    console.log(res);
+    // console.log(res);
     setTimeout(() => {
         loadingBarText.text = "Press anywhere to start";
         document.onpointerup = () => {
@@ -160,9 +173,8 @@ function run(res) {
     initBallStart();
     initUI();
     initSplash(()=>{
-        popup.visible = true;
-        popupTxt.visible = true;
-        popup.interactive = true;
+        bounceIn(startPopup);
+        startPopup.interactive = true;
         resources[gameBgm].data.loop = true;
         resources[gameBgm].data.volume = 0.1;
         resources[gameBgm].data.play();
@@ -187,17 +199,17 @@ let gateSpeedInit = 20;
 let gateSpeedX = gateSpeedInit;
 let gateSpeedY = gateSpeedInit;
 
-let ball;
+let piggy;
 let initialBallSpeed = 1;
-let maxBallSpeed = 20;
+let maxBallSpeed = 10;
 let ballSpeed = initialBallSpeed;
 let ballDirX;
 let ballDirY;
 let ballIncreaseRate = 0.5;
 let ballUpdateInterval;
 
-let popup;
-let popupTxt;
+let startPopup;
+let endPopup;
 
 let highScore = 0;
 let highScoreText;
@@ -253,35 +265,45 @@ function initBoard() {
     gateRight.height = 50;
     app.stage.addChild(gateRight);
 
-    popup = new PIXI.Sprite(resources[popupJpg].texture);
-    popup.anchor.set(0.5, 0.5);
-    popup.x = 1920/2;
-    popup.y = 1080/2;
-    popup.scale.set(3, 3);
-    popup.zIndex = 2;
-    popup.visible = false;
-    popup.interactive = false;
-    popup.on("pointerup", ()=>{
-        startGame();
+    startPopup = new PIXI.Sprite(resources[startPopupImg].texture);
+    startPopup.anchor.set(0.5, 0.5);
+    startPopup.scale.set(0.0001, 0.0001);
+    startPopup.x = 1920/2;
+    startPopup.y = 1080/2;
+    startPopup.zIndex = 2;
+    startPopup.interactive = false;
+    startPopup.on("pointerup", ()=>{
+        bounceOut(startPopup);
+        setTimeout(() => {
+            startGame();
+        }, 500);
         resources[buttonFeedback].data.play();
     });
-    app.stage.addChild(popup);
+    app.stage.addChild(startPopup);
 
-    popupTxt = new PIXI.Text(`
-    Use WSAD or Arrows
-    Up/Down/Left/Right
-    to move.
+    endPopup = new PIXI.Sprite(resources[endPopupImg].texture);
+    endPopup.anchor.set(0.5, 0.5);
+    endPopup.x = 1920/2;
+    endPopup.y = 1080/2;
+    endPopup.scale.set(0.0001, 0.0001);
+    endPopup.zIndex = 2;
+    endPopup.visible = false;
+    endPopup.interactive = false;
+    endPopup.on("pointerup", ()=>{
+        bounceOut(endPopup);
+        setTimeout(() => {
+            startGame();
+        }, 500);
+        resources[buttonFeedback].data.play();
+    });
 
-    Stop the monster from escaping!
-    Good luck!
-
-    Tap to start
-    `, {fontSize: 40, wordWrap: true, wordWrapWidth: 900});
-    popupTxt.x = 1920/2 - 20;
-    popupTxt.y = 1080/2;
-    popupTxt.anchor.set(0.5, 0.5);
-    popupTxt.visible = false;
-    app.stage.addChild(popupTxt);
+    let endScoreText = new PIXI.Text("", {fontSize: 100, fill: "0xFFFFFF", fontFamily: "Arial"});
+    endScoreText.anchor.set(0, 0.5);
+    endScoreText.x = 10;
+    endScoreText.y = -60;
+    endScoreText.name = "scoreText";
+    endPopup.addChild(endScoreText);
+    app.stage.addChild(endPopup);  
 }
 
 function initControls() {
@@ -321,17 +343,28 @@ function initControls() {
 }
 
 function initBallStart() {
-    let sheet = resources[monsterJsonKey].spritesheet;
-    ball = new PIXI.extras.AnimatedSprite(sheet.animations["walk"]);
-    ball.anchor.set(0.5, 0.5);
-    ball.x = 1920/2;
-    ball.y = 1080/2;
-    ball.height = 100;
-    ball.width = 100;
-    ball.animationSpeed = 0.15;
-    ball.play();
-    ball.visible = false;
-    app.stage.addChild(ball);
+    let sheet = resources[piggyJsonKey].spritesheet;
+    piggy = new PIXI.Container();
+    piggy.x = 1920/2;
+    piggy.y = 1080/2;
+    piggy.height = 100;
+    piggy.width = 100;
+    piggy.visible = false;
+
+    let shadow = new PIXI.Sprite(resources[piggyShadow].texture);
+    shadow.anchor.set(0.5, 0.5);
+    shadow.scale.set(0.16, 0.16);
+    shadow.name = "shadow";
+    piggy.addChild(shadow);
+
+    let pig = new PIXI.extras.AnimatedSprite(sheet.animations["walk"]);
+    pig.anchor.set(0.5, 0.5);
+    pig.scale.set(0.15, 0.15);
+    pig.name = "pig";
+    pig.play();
+    piggy.addChild(pig);
+
+    app.stage.addChild(piggy);
 }
 
 /** Helper area */
@@ -364,15 +397,10 @@ function endGame() {
     ballDirX = 0;
     ballDirY = 0;
 
-    popup.visible = true;
-    popup.interactive = true;
-    popupTxt.text = `
-    Boar escaped!
-    
-    Score: ${score}
-    
-    Tap to restart`;
-    popupTxt.visible = true;
+    endPopup.visible = true;
+    bounceIn(endPopup);
+    endPopup.interactive = true;
+    endPopup.getChildByName("scoreText").text = score.toString();
 
     if (score >= highScore) {
         highScore = score;
@@ -383,7 +411,7 @@ function endGame() {
 function startGame() {
     resetBoard();
     gameStarted = true;
-    
+    piggy.getChildByName("pig").tint = 0xFFFFFF;
     ballUpdateInterval = setInterval(()=>{
         if (gameStarted) {
             if (ballSpeed < maxBallSpeed) {
@@ -393,8 +421,12 @@ function startGame() {
             if (speedLevel > level) {
                 level = speedLevel;
                 levelText.text = level.toString();
+                if (speedLevel >= maxBallSpeed/4) {
+                    piggy.getChildByName("pig").tint = 0xDB7093;
+                }
                 if (level === maxBallSpeed / 2) {
                     levelText.text = level.toString() + "\n(Max)";
+                    piggy.getChildByName("pig").tint = 0xFF0000;
                 }
             }
         }
@@ -409,20 +441,21 @@ function initSplash(callback) {
     splash.zIndex = 2;
     container.addChild(splash);
 
-    let title = new PIXI.Text("Angry Angry PIG", {fontSize: 100, fill: "#FFFFFF"});
-    title.anchor.set(0.5, 0.5);
-    title.x = 1920/2;
-    title.y = 200;
-    container.addChild(title);
-
-    let playButton = new PIXI.Sprite(resources[popupJpg].texture);
+    let playButton = new PIXI.Sprite(resources[startBtnImg].texture);
     playButton.anchor.set(0.5, 0.5);
-    playButton.x = 1920/2;
+    playButton.x = 1920/2 - 150;
     playButton.y = 1080 - 300;
     playButton.zIndex = 2;
     playButton.interactive = true;
     playButton.on("pointerdown", ()=>{
         playButton.scale.set(0.9, 0.9);
+    });
+    playButton.on("mouseover", ()=> {
+        playButton.tint = 0xFFFF00;
+        resources[buttonFeedback].data.play();
+    });
+    playButton.on("mouseout", ()=> {
+        playButton.tint = 0xFFFFFF;
     });
     playButton.on("pointerupoutside", ()=>{
         playButton.scale.set(1, 1);
@@ -435,82 +468,46 @@ function initSplash(callback) {
     });
     container.addChild(playButton);
 
-    let playText = new PIXI.Text("Play", {fontSize: 100, fill: "#000000"});
-    playText.anchor.set(0.5, 0.5);
-    playText.height = 100;
-    playText.width = 100;
-    playButton.addChild(playText);
-
-    let helpButton = new PIXI.Sprite(resources[popupJpg].texture);
+    let helpButton = new PIXI.Sprite(resources[helpBtnImg].texture);
     helpButton.anchor.set(0.5, 0.5);
-    helpButton.x = 1920/2;
+    helpButton.x = 1920/2 + 90;
     helpButton.y = 1080 - 150;
     helpButton.zIndex = 2;
     helpButton.interactive = true;
     helpButton.on("pointerdown", ()=>{
         helpButton.scale.set(0.9, 0.9);
     });
+    helpButton.on("mouseover", ()=> {
+        helpButton.tint = 0xFFFF00;
+        resources[buttonFeedback].data.play();
+    });
+    helpButton.on("mouseout", ()=> {
+        helpButton.tint = 0xFFFFFF;
+    });
     helpButton.on("pointerupoutside", ()=>{
         helpButton.scale.set(1, 1);
     });
     helpButton.on("pointerup", ()=>{
         helpButton.scale.set(1, 1);
-        helpPopup.visible = true;
-        helpPopupTxt.visible = true;
-        creditsPopupTxt.visible = true;
+        helpPopup.interactive = true;
+        helpPopup.scale.set(0.0001, 0.0001);
+        bounceIn(helpPopup);
         resources[buttonFeedback].data.play();
     });
     container.addChild(helpButton);
 
-    let helpText = new PIXI.Text("Help", {fontSize: 100, fill: "#000000"});
-    helpText.anchor.set(0.5, 0.5);
-    helpText.height = 100;
-    helpText.width = 100;
-    helpButton.addChild(helpText);
-
-    let helpPopup = new PIXI.Sprite(resources[popupJpg].texture);
+    let helpPopup = new PIXI.Sprite(resources[helpPopupImg].texture);
+    helpPopup.scale.set(0.0001, 0.0001);
+    helpPopup.interactive = false;
     helpPopup.anchor.set(0.5, 0.5);
     helpPopup.x = 1920/2;
     helpPopup.y = 1080/2;
-    helpPopup.scale.set(5, 5);
-    helpPopup.visible = false;
-    helpPopup.interactive = true;
     helpPopup.on("pointerup", ()=>{
-        helpPopup.visible = false;
-        helpPopupTxt.visible = false;
-        creditsPopupTxt.visible = false;
+        helpPopup.interactive = false;
+        bounceOut(helpPopup);
         resources[buttonFeedback].data.play();
     });
     container.addChild(helpPopup);
-
-    let helpPopupTxt = new PIXI.Text(`
-    W/ArrowUp: Up
-    S/ArrowLeft: Left
-    A/ArrowDown: Down
-    D/ArrowRight: Right
-
-    Stop the monster from escaping by moving
-    the gates to block it.
-
-
-
-                                Tap to close
-    `, {fontSize: 50, wordWrap: true, wordWrapWidth: 1800});
-    helpPopupTxt.x = 350;
-    helpPopupTxt.y = 80;
-    helpPopupTxt.visible = false;
-    container.addChild(helpPopupTxt);
-
-    let creditsPopupTxt = new PIXI.Text(`
-    Game developed by:         Art by:                Music by:
-    Hazelnut                            Hazelnut            Hazelnut & www.ourmusicbox.com
-    `, {fontSize: 30, wordWrap: true, wordWrapWidth: 1800});
-    creditsPopupTxt.x = 400;
-    creditsPopupTxt.y = 950;
-    creditsPopupTxt.anchor.set(0, 1);
-    creditsPopupTxt.visible = false;
-    container.addChild(creditsPopupTxt);
-
     app.stage.addChild(container);
 }
 
@@ -524,15 +521,13 @@ function resetBoard() {
     gateRight.x = 1920 - 420;
     gateRight.y = 1080/2;
     
-    popup.visible = false;
-    popup.interactive = false;
-    popupTxt.visible = false;
+    endPopup.interactive = false;
 
     clearInterval(ballUpdateInterval);
     ballSpeed = initialBallSpeed;
-    ball.x = 1920/2;
-    ball.y = 1080/2;
-    ball.visible = true;
+    piggy.x = 1920/2;
+    piggy.y = 1080/2;
+    piggy.visible = true;
     randomBallDirection();
 
     score = 0;
@@ -551,12 +546,12 @@ function randomBallDirection() {
     if (Math.abs(ballDirY) < threshold) {
         ballDirY *= 2;
     }
-    ball.rotation = Math.atan2(ballDirY, ballDirX);
+    piggy.rotation = Math.atan2(ballDirY, ballDirX) + Math.PI/2;
 }
 
 function randomBallDirectionX() {
     ballDirX = Math.random() * ((Math.random() > 0.5) ? 1 : -1) + ballIncreaseRate;
-    ball.rotation = Math.atan2(ballDirY, ballDirX);
+    piggy.rotation = Math.atan2(ballDirY, ballDirX) + Math.PI/2;
     resources[blockSound].data.volume = 0.5;
     resources[blockSound].data.currentTime = 0;
     resources[blockSound].data.play();
@@ -564,7 +559,7 @@ function randomBallDirectionX() {
 
 function randomBallDirectionY() {
     ballDirY = Math.random() * ((Math.random() > 0.5) ? 1 : -1) + ballIncreaseRate;
-    ball.rotation = Math.atan2(ballDirY, ballDirX);
+    piggy.rotation = Math.atan2(ballDirY, ballDirX) + Math.PI/2;
     resources[blockSound].data.volume = 0.5;
     resources[blockSound].data.currentTime = 0;
     resources[blockSound].data.play();
@@ -587,7 +582,7 @@ function initUI() {
     creditsDev.x = 420/2;
     creditsDev.y = 1080 - 110;
     leftUIContainer.addChild(creditsDev);
-    let creditsArt = new PIXI.Text("Art by Hazelnut", {fontSize: 25, fill: "#FFFFFF"});
+    let creditsArt = new PIXI.Text("Art by ArtOfCielver", {fontSize: 25, fill: "#FFFFFF"});
     creditsArt.anchor.set(0.5, 0.5);
     creditsArt.x = 420/2;
     creditsArt.y = 1080 - 70;
@@ -653,13 +648,14 @@ function updateLoop() {
         }
     }
 
-    if (gameStarted) {        
-        ball.x += ballDirX * ballSpeed;
-        ball.y += ballDirY * ballSpeed;
+    if (gameStarted) {
+        piggy.getChildByName("pig").animationSpeed = ballSpeed/40;
+        piggy.x += ballDirX * ballSpeed;
+        piggy.y += ballDirY * ballSpeed;
         score += 1;
         scoreText.text = score.toLocaleString();
-        if (ball.x >= 1920 - 440 || ball.x <= 440) {
-            if (ball.y < gateRight.y - lenientThreshold || ball.y > gateRight.y + lenientThreshold) {
+        if (piggy.x >= 1920 - 440 || piggy.x <= 440) {
+            if (piggy.y < gateRight.y - lenientThreshold || piggy.y > gateRight.y + lenientThreshold) {
                 endGame();
             }
             else {
@@ -667,8 +663,8 @@ function updateLoop() {
                 randomBallDirectionY();
             }
         }
-        if (ball.y >= 1080 - 20 || ball.y <= 0 + 20) {
-            if (ball.x < gateTop.x - lenientThreshold || ball.x > gateTop.x + lenientThreshold) {
+        if (piggy.y >= 1080 - 20 || piggy.y <= 0 + 20) {
+            if (piggy.x < gateTop.x - lenientThreshold || piggy.x > gateTop.x + lenientThreshold) {
                 endGame();
             }
             else {
@@ -690,4 +686,28 @@ function makeFullScreen() {
             requestMethod.call(htmlDocElement);
         }
     }
+}
+
+function bounceIn(element) {
+    new TWEEN.Tween(element.scale)
+    .to({x: 1.2, y: 1.2}, 200)
+    .easing(TWEEN.Easing.Exponential.Out)
+    .chain(
+        new TWEEN.Tween(element.scale)
+        .to({x: 1, y: 1}, 100)
+        .easing(TWEEN.Easing.Exponential.Out)
+    )
+    .start();
+}
+
+function bounceOut(element) {
+    new TWEEN.Tween(element.scale)
+    .to({x: 1.2, y: 1.2}, 200)
+    .easing(TWEEN.Easing.Exponential.Out)
+    .chain(
+        new TWEEN.Tween(element.scale)
+        .to({x: 0.0001, y: 0.0001}, 100)
+        .easing(TWEEN.Easing.Exponential.Out)
+    )
+    .start();
 }
