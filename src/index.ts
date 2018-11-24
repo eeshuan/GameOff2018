@@ -114,52 +114,29 @@ loader.load((_, res)=>{
 
             document.onpointerdown = (ev) => {
                 if (inGame) {
-                    startPtX = ev.clientX;
-                    startPtY = ev.clientY;
-                    pointerdown = true;
-                    joyStick.visible = true;
-                }
-            }
-            document.onpointermove = (ev) => {
-                if (inGame) {
-                    if (pointerdown) {
-                        joyStickHandle.x = Math.max(Math.min(ev.clientX - startPtX, 100), -100);
-                        joyStickHandle.y = Math.max(Math.min(ev.clientY - startPtY, 100), -100);
-                        if (ev.clientX - startPtX > 0) {
-                            leftDir = false;
-                            rightDir = true;
-                            gateSpeedX = Math.abs((ev.clientX - startPtX) / 10);
-                        }
-                        else if (ev.clientX - startPtX < 0) {
-                            leftDir = true;
-                            rightDir = false;
-                            gateSpeedX = Math.abs((ev.clientX - startPtX) / 10);
-                        }
-                        if (ev.clientY - startPtY > 0) {
-                            topDir = false;
-                            bottomDir = true;
-                            gateSpeedY = Math.abs((ev.clientY - startPtY) / 10);
-                        }
-                        else if (ev.clientY - startPtY < 0) {
-                            bottomDir = false;
-                            topDir = true;
-                            gateSpeedY = Math.abs((ev.clientY - startPtY) / 10);
-                        }
+                    if (ev.x/screen.width * 1920 > gateTop.worldTransform.tx) {
+                        rightDir = true;
+                    }
+                    if (ev.x/screen.width * 1920 < gateTop.worldTransform.tx) {
+                        leftDir = true;
+                    }
+                    if (ev.y/screen.height * 1080 > gateLeft.worldTransform.ty) {
+                        bottomDir = true;
+                    }
+                    if (ev.y/screen.height * 1080 < gateLeft.worldTransform.ty) {
+                        topDir = true;
                     }
                 }
             }
+            document.onpointermove = (ev) => {
+
+            }
             document.onpointerup = () => {
                 if (inGame) {
-                    startPtX = 0;
-                    startPtY = 0;
-                    leftDir = false;
                     rightDir = false;
+                    leftDir = false;
                     topDir = false;
                     bottomDir = false;
-                    pointerdown = false;
-                    joyStick.visible = false;
-                    joyStickHandle.x = 0;
-                    joyStickHandle.y = 0;
                 }
             }
         }
@@ -289,6 +266,7 @@ function initBoard() {
     endPopup.zIndex = 2;
     endPopup.visible = false;
     endPopup.interactive = false;
+    endPopup.hitArea = new PIXI.Rectangle(-1920/2, -1080/2, 1920, 1080);
     endPopup.on("pointerup", ()=>{
         bounceOut(endPopup);
         setTimeout(() => {
